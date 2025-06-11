@@ -27,7 +27,8 @@ else()
         target_link_libraries(${PROJECT_NAME} PRIVATE CommonLibSSE::CommonLibSSE)
         target_include_directories(${PROJECT_NAME} PRIVATE CommonLibSSE::CommonLibSSE)
 endif()
-
+find_library(OPENVR_API_LIBRARY openvr_api REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENVR_API_LIBRARY}) 
 find_path(DETOURS_INCLUDE_DIRS "detours/detours.h")
 find_library(DETOURS_LIBRARY detours REQUIRED)
 

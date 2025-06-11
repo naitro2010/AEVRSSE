@@ -1,28 +1,31 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-  "name": "skse-clibng-template",
+  "name": "AEVRSSE",
   "version-string": "0.0.5",
-  "description": "SKSE CommonLibSSE-NG Template",
-  "homepage": "https://github.com/epinter/skse-clibng-template",
+  "description": "SKSE AEVRSSE",
+  "homepage": "https://github.com/naitro2010/AEVRSSE",
+  "builtin-baseline": "b02e341c927f16d991edbd915d8ea43eac52096c",
+  "dependencies": [
+    "openvr"
+  ],
+  "default-features": [
+    "plugin"
+  ],
   "features": {
     "plugin": {
       "description": "SKSE plugin",
       "dependencies": [
         "commonlibsse-ng",
+        "detours",
         "spdlog",
-        "xbyak",
-        "detours"
+        "xbyak"
       ]
     }
   },
-  
-  "default-features": [
-    "plugin"
-  ],
-  "builtin-baseline": "b02e341c927f16d991edbd915d8ea43eac52096c",
   "overrides": [
-  { 
-    "name":"spdlog",
-    "version":"1.15.1"
-  }]
+    {
+      "name": "spdlog",
+      "version": "1.15.1"
+    }
+  ]
 }
