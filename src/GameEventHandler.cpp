@@ -112,8 +112,18 @@ namespace plugin {
     void GameEventHandler::onPostLoadGame() {
         if (patched == false) {
             auto version = REL::Module::get().version();
-            if (version == REL::Version(1, 6, 1170,0)) {
+            if (version == REL::Version(1, 6, 1170, 0)) 
+            {
                 orig_PlayerCameraUpdate = (void (*)(RE::PlayerCamera *)) REL::Offset(0x8e29a0).address();
+                DetourTransactionBegin();
+                DetourUpdateThread(GetCurrentThread());
+                DetourAttach(&(PVOID &) orig_PlayerCameraUpdate, UpdatePlayerCameraHook);
+                DetourTransactionCommit();
+                patched = true;
+            }
+            else if (version == REL::Version(1, 5, 97, 0)) 
+            {
+                orig_PlayerCameraUpdate = (void (*)(RE::PlayerCamera *)) REL::Offset(0x770970).address();
                 DetourTransactionBegin();
                 DetourUpdateThread(GetCurrentThread());
                 DetourAttach(&(PVOID &) orig_PlayerCameraUpdate, UpdatePlayerCameraHook);
