@@ -48,10 +48,10 @@ namespace plugin {
     bool restore_from_cache = false;
     bool replace_projection_matrix = true;
     bool renderLeft = true;
-    float eyeSeparation = 0.065f*70.0f;
+    float eyeSeparation = 1.5f;
     float nZ = 15.0f;
     float fZ = 10000.0f;
-    float frustum_scale = 0.06f;
+    float frustum_scale = 0.005f;
     void SetFrameBufferMatricesHook(void* t, uint64_t arg2) {
         DirectX::XMMATRIX* view=(DirectX::XMMATRIX*)REL::RelocationID(0, 388922).address();
         DirectX::XMMATRIX *proj = (DirectX::XMMATRIX *) (REL::RelocationID(0, 388926).address());
@@ -164,7 +164,8 @@ namespace plugin {
                     }
                     pEventQuery->Release();
                 }
-                RE::BSGraphics::Renderer::GetSingleton()->GetCurrentRenderWindow()->swapChain->Present(1, 0);
+                orig_SceneUpdate(a);
+                (*(uint32_t *) REL::RelocationID(0, 411489).address()) -= 1;
                 {
                     REX::W32::D3D11_QUERY_DESC queryDesc;
                     queryDesc.query = REX::W32::D3D11_QUERY::D3D11_QUERY_EVENT;
@@ -179,8 +180,7 @@ namespace plugin {
                     pEventQuery->Release();
                 }
                 RE::BSGraphics::Renderer::GetSingleton()->Unlock();
-                //orig_SceneUpdate(a);
-                (*(uint32_t *) REL::RelocationID(0, 411489).address()) += 1;
+
                 return;
             } else {
                 RE::BSGraphics::Renderer::GetSingleton()->Lock();
@@ -197,7 +197,8 @@ namespace plugin {
                     }
                     pEventQuery->Release();
                 }
-                RE::BSGraphics::Renderer::GetSingleton()->GetCurrentRenderWindow()->swapChain->Present(1, 0);
+                orig_SceneUpdate(a);
+                //(*(uint32_t *) REL::RelocationID(0, 411489).address()) -= 1;
                 {
                     REX::W32::D3D11_QUERY_DESC queryDesc;
                     queryDesc.query = REX::W32::D3D11_QUERY::D3D11_QUERY_EVENT;
@@ -213,7 +214,7 @@ namespace plugin {
                 }
                 RE::BSGraphics::Renderer::GetSingleton()->Unlock();
                 //orig_SceneUpdate(a);
-                (*(uint32_t *) REL::RelocationID(0, 411489).address()) += 1;
+                //(*(uint32_t *) REL::RelocationID(0, 411489).address()) += 1;
                 return;
             }
         } else {
@@ -251,9 +252,9 @@ namespace plugin {
                 
                 RE::BSGraphics::Renderer::GetSingleton()->Lock();
                 renderLeft = true;
-                SetFrameBufferMatricesHook(RE::BSGraphics::Renderer::GetSingleton(), 0);
+                //SetFrameBufferMatricesHook(RE::BSGraphics::Renderer::GetSingleton(), 0);
                 orig_DrawCallHook(t, mode);
-                SetFrameBufferMatricesHook(RE::BSGraphics::Renderer::GetSingleton(), 0);
+                //SetFrameBufferMatricesHook(RE::BSGraphics::Renderer::GetSingleton(), 0);
                 //RE::BSGraphics::Renderer::GetSingleton()->GetCurrentRenderWindow()->swapChain->Present(1, 0);
                     /* if (REX::W32::D3D11_VIEWPORT *viewport = (REX::W32::D3D11_VIEWPORT *) REL::RelocationID(0, 388834).address()) {
                     if (renderLeft) {
@@ -272,9 +273,9 @@ namespace plugin {
                     
                 renderLeft = false;
                     
-                SetFrameBufferMatricesHook(RE::BSGraphics::Renderer::GetSingleton(), 0);
+                //SetFrameBufferMatricesHook(RE::BSGraphics::Renderer::GetSingleton(), 0);
                 orig_DrawCallHook(t, mode);
-                SetFrameBufferMatricesHook(RE::BSGraphics::Renderer::GetSingleton(), 0);
+                //SetFrameBufferMatricesHook(RE::BSGraphics::Renderer::GetSingleton(), 0);
                 //RE::BSGraphics::Renderer::GetSingleton()->GetCurrentRenderWindow()->swapChain->Present(1, 0);
                 RE::BSGraphics::Renderer::GetSingleton()->Unlock();
 
