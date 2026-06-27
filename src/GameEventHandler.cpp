@@ -48,14 +48,13 @@ namespace plugin {
     bool restore_from_cache = false;
     bool replace_projection_matrix = true;
     bool renderLeft = true;
-    float eyeSeparation = 1.5f;
-    float nZ = 15.0f;
-    float fZ = 10000.0f;
-    float frustum_scale = 0.005f;
+    float eyeSeparation = 0.0214f * 70.0f;
+    float frustum_scale = 0.05f;
     void SetFrameBufferMatricesHook(void* t, uint64_t arg2) {
         DirectX::XMMATRIX* view=(DirectX::XMMATRIX*)REL::RelocationID(0, 388922).address();
         DirectX::XMMATRIX *proj = (DirectX::XMMATRIX *) (REL::RelocationID(0, 388926).address());
         DirectX::XMMATRIX *viewproj = (DirectX::XMMATRIX *) (REL::RelocationID(0, 388931).address());
+        
         if (copy_to_cache) {
             viewcache = *view;
             projcache = *proj;
@@ -66,27 +65,22 @@ namespace plugin {
             *proj = projcache;
             *viewproj = XMMatrixMultiply(viewcache, projcache);
         }
-        auto fov = 45.0f;
+
         if (!RE::BSGraphics::Renderer::GetSingleton()) {
             return;
         }
-
+        
         
         auto size = RE::BSGraphics::Renderer::GetSingleton()->GetScreenSize();
 
         float aspectRatio = ((float) size.width) / ((float) size.height);
-        
         if (replace_projection_matrix == true) {
-            if (auto cam=RE::PlayerCamera::GetSingleton()) {
-                if (auto camstate = cam->currentState) {
-                    if (cam->IsInFirstPerson()) {
-                        //fov = cam->firstPersonFOV * (M_PI / 180.0f);
-                        fov = cam->worldFOV * (M_PI / 180.0f);
-                    } else {
-                        fov = cam->worldFOV*(M_PI/180.0f);
-                    }
-                }
-            }
+            auto original_vfov = atanf(1.0f / proj->r[1].m128_f32[1]) * 2.0f;
+            auto original_nZ = proj->r[3].m128_f32[2] / (-proj->r[2].m128_f32[2]);
+            auto original_fZ = ((proj->r[2].m128_f32[2] * original_nZ) / (proj->r[2].m128_f32[2]-1.0f));
+            float nZ = original_nZ;
+            float fZ = original_fZ;
+            float fov = original_vfov*aspectRatio;
             float vFov = fov / aspectRatio;
             float viewHeight = 2.0f * nZ * tanf(vFov / 2.0f);
             float viewWidth = viewHeight * aspectRatio;
