@@ -51,7 +51,7 @@ namespace plugin {
     float eyeSeparation = 0.065f*70.0f;
     float nZ = 15.0f;
     float fZ = 10000.0f;
-    float frustum_scale = 0.0349f;
+    float frustum_scale = 0.06f;
     void SetFrameBufferMatricesHook(void* t, uint64_t arg2) {
         DirectX::XMMATRIX* view=(DirectX::XMMATRIX*)REL::RelocationID(0, 388922).address();
         DirectX::XMMATRIX *proj = (DirectX::XMMATRIX *) (REL::RelocationID(0, 388926).address());
@@ -99,7 +99,7 @@ namespace plugin {
             DirectX::XMMATRIX oldview = *view;
             DirectX::XMMATRIX oldproj = *proj;
             DirectX::XMMATRIX oldviewproj = *viewproj;
-            *view = XMMatrixMultiply(DirectX::XMMatrixTranslation(-shift, 0.0, 0.0), (*view));
+            *view = XMMatrixMultiply((*view), DirectX::XMMatrixTranslation(-shift, 0.0, 0.0));
             *proj = DirectX::XMMatrixPerspectiveOffCenterLH(left_left, left_right, left_bottom, left_top, nZ, fZ);
             *viewproj = XMMatrixMultiply(*view,*proj);
             
@@ -113,8 +113,115 @@ namespace plugin {
         
         
     }
-    auto orig_DrawCallHook = (void (*)(void *t, float frameDelta)) nullptr;
-    void DrawCallHook(void *t, float frameDelta) {
+    auto orig_SceneUpdateD = (void (*)(uint32_t a)) nullptr;
+    void SceneUpdateD(uint32_t a) {
+        if (replace_projection_matrix == true) {
+            if (renderLeft == true) {
+                return;
+            } else {
+                orig_SceneUpdateD(a);
+            }
+        }
+    }
+    auto orig_SceneUpdateC = (void (*)(uint32_t a)) nullptr;
+    void SceneUpdateC(uint32_t a) {
+        if (replace_projection_matrix == true) {
+            if (renderLeft == true) {
+                return;
+            } else {
+                orig_SceneUpdateC(a);
+            }
+        }
+    }
+    auto orig_SceneUpdateB = (void (*)(void* a)) nullptr;
+    void SceneUpdateB(void* a) {
+        if (replace_projection_matrix == true) {
+            if (renderLeft == true) {
+                orig_SceneUpdateB(a);
+            } else {
+                orig_SceneUpdateB(a);
+            }
+        } else {
+        
+            orig_SceneUpdateB(a);
+        }
+    }
+    auto orig_SceneUpdate = (void (*)(void* a))nullptr;
+    void SceneUpdate(void* a) {
+        if (replace_projection_matrix == true) {
+            if (renderLeft == true) {
+                RE::BSGraphics::Renderer::GetSingleton()->Lock();
+                {
+                    REX::W32::D3D11_QUERY_DESC queryDesc;
+                    queryDesc.query = REX::W32::D3D11_QUERY::D3D11_QUERY_EVENT;
+                    queryDesc.miscFlags = 0;
+                    REX::W32::ID3D11Query *pEventQuery = nullptr;
+                    RE::BSGraphics::Renderer::GetSingleton()->GetDevice()->CreateQuery(&queryDesc, &pEventQuery);
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->Flush();
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->End(pEventQuery);
+                    while (RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->GetData(pEventQuery, nullptr, 0, 0) != 0) {
+                        std::this_thread::sleep_for(std::chrono::microseconds(100));
+                    }
+                    pEventQuery->Release();
+                }
+                RE::BSGraphics::Renderer::GetSingleton()->GetCurrentRenderWindow()->swapChain->Present(1, 0);
+                {
+                    REX::W32::D3D11_QUERY_DESC queryDesc;
+                    queryDesc.query = REX::W32::D3D11_QUERY::D3D11_QUERY_EVENT;
+                    queryDesc.miscFlags = 0;
+                    REX::W32::ID3D11Query *pEventQuery = nullptr;
+                    RE::BSGraphics::Renderer::GetSingleton()->GetDevice()->CreateQuery(&queryDesc, &pEventQuery);
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->Flush();
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->End(pEventQuery);
+                    while (RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->GetData(pEventQuery, nullptr, 0, 0) != 0) {
+                        std::this_thread::sleep_for(std::chrono::microseconds(100));
+                    }
+                    pEventQuery->Release();
+                }
+                RE::BSGraphics::Renderer::GetSingleton()->Unlock();
+                //orig_SceneUpdate(a);
+                (*(uint32_t *) REL::RelocationID(0, 411489).address()) += 1;
+                return;
+            } else {
+                RE::BSGraphics::Renderer::GetSingleton()->Lock();
+                {
+                    REX::W32::D3D11_QUERY_DESC queryDesc;
+                    queryDesc.query = REX::W32::D3D11_QUERY::D3D11_QUERY_EVENT;
+                    queryDesc.miscFlags = 0;
+                    REX::W32::ID3D11Query *pEventQuery = nullptr;
+                    RE::BSGraphics::Renderer::GetSingleton()->GetDevice()->CreateQuery(&queryDesc, &pEventQuery);
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->Flush();
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->End(pEventQuery);
+                    while (RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->GetData(pEventQuery, nullptr, 0, 0) != 0) {
+                        std::this_thread::sleep_for(std::chrono::microseconds(100));
+                    }
+                    pEventQuery->Release();
+                }
+                RE::BSGraphics::Renderer::GetSingleton()->GetCurrentRenderWindow()->swapChain->Present(1, 0);
+                {
+                    REX::W32::D3D11_QUERY_DESC queryDesc;
+                    queryDesc.query = REX::W32::D3D11_QUERY::D3D11_QUERY_EVENT;
+                    queryDesc.miscFlags = 0;
+                    REX::W32::ID3D11Query *pEventQuery = nullptr;
+                    RE::BSGraphics::Renderer::GetSingleton()->GetDevice()->CreateQuery(&queryDesc, &pEventQuery);
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->Flush();
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->End(pEventQuery);
+                    while (RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->GetData(pEventQuery, nullptr, 0, 0) != 0) {
+                        std::this_thread::sleep_for(std::chrono::microseconds(100));
+                    }
+                    pEventQuery->Release();
+                }
+                RE::BSGraphics::Renderer::GetSingleton()->Unlock();
+                //orig_SceneUpdate(a);
+                (*(uint32_t *) REL::RelocationID(0, 411489).address()) += 1;
+                return;
+            }
+        } else {
+            orig_SceneUpdate(a);
+        }
+    }
+    auto orig_DrawCallHook = (void (*)(void *t, float)) nullptr;
+    void DrawCallHook(void *t, float mode) {
         if (replace_projection_matrix == true) {
             if (auto renderer = RE::BSGraphics::Renderer::GetSingleton()) {
                 //auto tex=renderer->CreateRenderTexture(screenSize.width, screenSize.height);
@@ -138,14 +245,16 @@ namespace plugin {
                 float *WorldTimeFrame = (float*)REL::RelocationID(0, 410199).address();
                 float *RealTimeFrame = (float *) REL::RelocationID(0, 410200).address();
                 
-                renderLeft = !renderLeft;
-                if (renderLeft) {
+                
 
-                    RE::Main::GetSingleton()->freezeTime = false;
-                    *WorldTimeFrame *= 2.0f;
-                    *RealTimeFrame *= 2.0f;
-                    orig_DrawCallHook(t, frameDelta);
-
+                    //RE::Main::GetSingleton()->freezeTime = false;
+                
+                RE::BSGraphics::Renderer::GetSingleton()->Lock();
+                renderLeft = true;
+                SetFrameBufferMatricesHook(RE::BSGraphics::Renderer::GetSingleton(), 0);
+                orig_DrawCallHook(t, mode);
+                SetFrameBufferMatricesHook(RE::BSGraphics::Renderer::GetSingleton(), 0);
+                //RE::BSGraphics::Renderer::GetSingleton()->GetCurrentRenderWindow()->swapChain->Present(1, 0);
                     /* if (REX::W32::D3D11_VIEWPORT *viewport = (REX::W32::D3D11_VIEWPORT *) REL::RelocationID(0, 388834).address()) {
                     if (renderLeft) {
                         viewport->topLeftX = 0.0f;
@@ -161,10 +270,14 @@ namespace plugin {
                     //context->RSSetViewports(1, &leftViewport);
                 }*/
                     
-                } else {
-                    RE::Main::GetSingleton()->freezeTime = true;
-                    orig_DrawCallHook(t, frameDelta);
-                }
+                renderLeft = false;
+                    
+                SetFrameBufferMatricesHook(RE::BSGraphics::Renderer::GetSingleton(), 0);
+                orig_DrawCallHook(t, mode);
+                SetFrameBufferMatricesHook(RE::BSGraphics::Renderer::GetSingleton(), 0);
+                //RE::BSGraphics::Renderer::GetSingleton()->GetCurrentRenderWindow()->swapChain->Present(1, 0);
+                RE::BSGraphics::Renderer::GetSingleton()->Unlock();
+
                 
                 /* context->RSSetViewports(1, &rightViewport);
                 renderLeft = false;
@@ -173,7 +286,7 @@ namespace plugin {
                 //RE::Main::GetSingleton()->freezeTime = false;
             }
         } else {
-            orig_DrawCallHook(t, frameDelta);
+            orig_DrawCallHook(t, mode);
         }
     }
     auto orig_PlayerCameraUpdate = (void (*)(RE::PlayerCamera *)) nullptr;
@@ -255,9 +368,22 @@ namespace plugin {
                 DetourTransactionCommit(); 
                 auto &trampoline = SKSE::GetTrampoline();
                 SKSE::AllocTrampoline(14);
-                
-                orig_DrawCallHook = (void (*)(void *t, float frameDelta))
-                    trampoline.write_call<5>(REL::RelocationID(0, 36544).address()+0x160, DrawCallHook);
+                orig_DrawCallHook = (void (*)(void *t, float delta))
+                    trampoline.write_call<5>(REL::RelocationID(0, 36564).address()+0xa97, DrawCallHook);
+                SKSE::AllocTrampoline(14);
+                orig_SceneUpdate =
+                    (void (*)(void* a)) trampoline.write_call<5>(REL::RelocationID(0, 36555).address() + 0x601, SceneUpdate);
+                SKSE::AllocTrampoline(14);
+                orig_SceneUpdateB =
+                    (void (*)(void* a)) trampoline.write_call<5>(REL::RelocationID(0, 36555).address() + 0x5f0, SceneUpdateB);
+                /* SKSE::AllocTrampoline(14);
+                orig_SceneUpdateC =
+                    (void (*)(uint32_t a)) trampoline.write_branch<5>(REL::RelocationID(0, 36555).address() + 0x659, SceneUpdateC);*/
+                //SKSE::AllocTrampoline(14);
+                /* orig_SceneUpdateD =
+                    (void (*)(uint32_t a)) trampoline.write_call<5>(REL::RelocationID(0, 36555).address() + 0x2ea, SceneUpdateD);*/
+                //orig_SceneUpdate = (void (*)(void *t)) trampoline.write_call<5>(
+                //    REL::RelocationID(0, 36555).address() + 0x5f0, SceneUpdate);
                 /* orig_PlayerCameraUpdate = (void (*)(RE::PlayerCamera *)) REL::Offset(0x8e29a0).address();
                 DetourTransactionBegin();
                 DetourUpdateThread(GetCurrentThread());
