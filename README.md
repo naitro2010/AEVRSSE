@@ -1,5 +1,9 @@
 # ***Skyrim AE Frame Interleaved VR Stereo Rendering Mod***
 
+## ***Warning***
+Do not use this mod if you have photosensitive epilepsy.
+It renders a different perspective each frame which can cause flickering if used with a normal 2D display or without ReShade and 3DToElse.
+
 ## ***Runtime requirements***
 - Skyrim AE 1.6.1170
 - [Skyrim Script Extender (SKSE)](https://skse.silverlock.org/)
