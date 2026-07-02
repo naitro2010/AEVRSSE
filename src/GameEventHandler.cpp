@@ -376,8 +376,21 @@ namespace plugin {
     void GameEventHandler::onInputLoaded() {
         logger::info("onInputLoaded()");
     }
-
+    bool SetSeparation(RE::StaticFunctionTag *, float value) {
+    
+        eyeSeparation = value;
+        return true;
+    }
+    bool SetConverge(RE::StaticFunctionTag *, float value) {
+        converge = value;
+        return true;
+    
+    }
     void GameEventHandler::onDataLoaded() {
+        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetSeparation", "AEVRSSE", SetSeparation,
+                                                             false);
+        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetConverge", "AEVRSSE", SetConverge,
+                                                             false);
         logger::info("onDataLoaded()");
     }
 
