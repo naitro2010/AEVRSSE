@@ -10,7 +10,7 @@ It renders a different perspective each frame which can cause flickering if used
 - [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444)
 
 ## ***Optional requirements***
-
+- For changing stereo rendering settings like convergence and eye separation with console commands [ConsoleUtil Extended](https://www.nexusmods.com/skyrimspecialedition/mods/133569)
 - For Side by Side and Over/Under stereo formats you will probably want ReShade and [3DToElse](https://github.com/BlueSkyDefender/Depth3D/blob/master/Other%20%20Shaders/3DToElse.fx)
 
 ## ***Compatibility***
