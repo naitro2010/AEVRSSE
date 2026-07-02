@@ -15,8 +15,8 @@ namespace plugin {
     bool restore_from_cache = false;
     bool replace_projection_matrix = true;
     bool renderLeft = true;
-    float eyeSeparation = 0.042f*70.0f;
-    float frustum_scale = 0.1f;
+    float eyeSeparation = 0.05f*70.0f;
+    float converge = 0.005f;
     void SetFrameBufferMatricesHook(void *t, uint64_t arg2) {
         DirectX::XMMATRIX *view = (DirectX::XMMATRIX *) REL::RelocationID(0, 388922).address();
         DirectX::XMMATRIX *proj = (DirectX::XMMATRIX *) (REL::RelocationID(0, 388926).address());
@@ -39,6 +39,7 @@ namespace plugin {
         auto size = RE::BSGraphics::Renderer::GetSingleton()->GetScreenSize();
 
         float aspectRatio = ((float) size.width) / ((float) size.height);
+        //DirectX::XMMatrixPerspectiveFovLH
         if (replace_projection_matrix == true) {
             auto original_vfov = atanf(1.0f / proj->r[1].m128_f32[1]) * 2.0f;
             auto original_nZ = proj->r[3].m128_f32[2] / (-proj->r[2].m128_f32[2]);
@@ -50,7 +51,7 @@ namespace plugin {
             float viewHeight = 2.0f * nZ * tanf(vFov / 2.0f);
             float viewWidth = viewHeight * aspectRatio;
             float shift = renderLeft ? (eyeSeparation / 2.0f) : (-eyeSeparation / 2.0f);
-            float frustum_shift = renderLeft ? ((eyeSeparation / 2.0f) * frustum_scale) : -((eyeSeparation / 2.0f) * frustum_scale);
+            float frustum_shift = renderLeft ? (converge*viewWidth) : -(converge*viewWidth);
             float left_left = -viewWidth / 2.0f - (frustum_shift);
             float left_right = viewWidth / 2.0f - (frustum_shift);
             float left_bottom = -viewHeight / 2.0f;
