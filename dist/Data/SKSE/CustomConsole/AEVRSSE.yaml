@@ -1,0 +1,21 @@
+name: aevrsse
+alias: aevr
+script: AEVRSSE
+help: AEVRSSE Plugin
+subs:
+  - name: converge
+    alias: c
+    func: SetConverge
+    args:
+      - name: value
+        type: float
+        required: true
+        help: convergence scale
+  - name: separation
+    alias: s
+    func: SetSeparation
+    args:
+      - name: value
+        type: float
+        required: true
+        help: eye separation value in skyrim units
