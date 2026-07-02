@@ -13,7 +13,7 @@ env:
   PROJECT_LONG_NAME: AEVRSSE
 jobs:
   build-skse:
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -42,8 +42,14 @@ jobs:
           cd artifacts
           mkdir SKSE
           mkdir SKSE/Plugins
+          mkdir SKSE/CustomConsole
           move ../AEVRSSE.dll SKSE/Plugins
           move ../AEVRSSE.pdb SKSE/Plugins
+          mkdir Scripts
+          mkdir Scripts/Source
+          copy ${{github.workspace}}/dist/Data/Scripts/*.pex Scripts
+          copy ${{github.workspace}}/dist/Data/Scripts/Source/*.psc Scripts/Source
+          copy ${{github.workspace}}/dist/Data/SKSE/CustomConsole/*.yaml SKSE/CustomConsole
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with: 
