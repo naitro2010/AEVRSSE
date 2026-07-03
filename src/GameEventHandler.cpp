@@ -262,6 +262,12 @@ namespace plugin {
                                                              false);
         RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetConverge", "AEVRSSE", SetConverge,
                                                              false);
+        auto light_array=RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectLIGH>();
+        for (auto* light : light_array) {
+            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kHemiShadow);
+            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kOmniShadow);
+            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kSpotShadow);
+        }
         logger::info("onDataLoaded()");
     }
 
