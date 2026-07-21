@@ -119,7 +119,7 @@ namespace plugin {
                     pEventQuery->Release();
                 }
                 orig_SceneUpdate(a);
-                (*(uint32_t *) REL::RelocationID(525008, 411489).address()) -= 1;
+                
                 {
                     REX::W32::D3D11_QUERY_DESC queryDesc;
                     queryDesc.query = REX::W32::D3D11_QUERY::D3D11_QUERY_EVENT;
@@ -182,11 +182,11 @@ namespace plugin {
                 float *RealTimeFrame = (float *) REL::RelocationID(523661, 410200).address();
 
                 RE::BSGraphics::Renderer::GetSingleton()->Lock();
-                renderLeft = true;
+                renderLeft = ((*(uint32_t *) REL::RelocationID(525008, 411489).address()) & 1) == 0;
 
                 orig_DrawCallHook(t, mode);
 
-                renderLeft = false;
+                renderLeft = ((*(uint32_t *) REL::RelocationID(525008, 411489).address()) & 1) == 0;
 
                 orig_DrawCallHook(t, mode);
 
