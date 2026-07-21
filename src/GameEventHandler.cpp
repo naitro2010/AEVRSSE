@@ -119,7 +119,7 @@ namespace plugin {
                     pEventQuery->Release();
                 }
                 orig_SceneUpdate(a);
-                
+                (*(uint32_t *) REL::RelocationID(525008, 411489).address()) -= 1;
                 {
                     REX::W32::D3D11_QUERY_DESC queryDesc;
                     queryDesc.query = REX::W32::D3D11_QUERY::D3D11_QUERY_EVENT;
@@ -152,7 +152,7 @@ namespace plugin {
                     pEventQuery->Release();
                 }
                 orig_SceneUpdate(a);
-
+                (*(uint32_t *) REL::RelocationID(525008, 411489).address()) -= 1;
                 {
                     REX::W32::D3D11_QUERY_DESC queryDesc;
                     queryDesc.query = REX::W32::D3D11_QUERY::D3D11_QUERY_EVENT;
@@ -186,10 +186,10 @@ namespace plugin {
 
                 orig_DrawCallHook(t, mode);
 
-                renderLeft = ((*(uint32_t *) REL::RelocationID(525008, 411489).address()) & 1) == 0;
+                renderLeft = !renderLeft;
 
                 orig_DrawCallHook(t, mode);
-
+                (*(uint32_t *) REL::RelocationID(525008, 411489).address()) += 2;
                 RE::BSGraphics::Renderer::GetSingleton()->Unlock();
             }
         } else {
