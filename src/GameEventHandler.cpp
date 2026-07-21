@@ -13,12 +13,12 @@ namespace plugin {
     bool restore_from_cache = false;
     bool replace_projection_matrix = true;
     bool renderLeft = true;
-    float eyeSeparation = 0.05f*70.0f;
+    float eyeSeparation = 0.05f * 70.0f;
     float converge = 0.005f;
     void SetFrameBufferMatricesHook(void *t, uint64_t arg2) {
-        DirectX::XMMATRIX *view = (DirectX::XMMATRIX *) REL::RelocationID(0, 388922).address();
-        DirectX::XMMATRIX *proj = (DirectX::XMMATRIX *) (REL::RelocationID(0, 388926).address());
-        DirectX::XMMATRIX *viewproj = (DirectX::XMMATRIX *) (REL::RelocationID(0, 388931).address());
+        DirectX::XMMATRIX *view = (DirectX::XMMATRIX *) REL::RelocationID(524875, 388922).address();
+        DirectX::XMMATRIX *proj = (DirectX::XMMATRIX *) (REL::RelocationID(524879, 388926).address());
+        DirectX::XMMATRIX *viewproj = (DirectX::XMMATRIX *) (REL::RelocationID(524884, 388931).address());
 
         if (copy_to_cache) {
             viewcache = *view;
@@ -48,7 +48,7 @@ namespace plugin {
             float viewHeight = 2.0f * nZ * tanf(vFov / 2.0f);
             float viewWidth = viewHeight * aspectRatio;
             float shift = renderLeft ? (eyeSeparation / 2.0f) : (-eyeSeparation / 2.0f);
-            float frustum_shift = renderLeft ? (converge*viewWidth) : -(converge*viewWidth);
+            float frustum_shift = renderLeft ? (converge * viewWidth) : -(converge * viewWidth);
             float left_left = -viewWidth / 2.0f - (frustum_shift);
             float left_right = viewWidth / 2.0f - (frustum_shift);
             float left_bottom = -viewHeight / 2.0f;
@@ -119,7 +119,7 @@ namespace plugin {
                     pEventQuery->Release();
                 }
                 orig_SceneUpdate(a);
-                (*(uint32_t *) REL::RelocationID(0, 411489).address()) -= 1;
+                (*(uint32_t *) REL::RelocationID(525008, 411489).address()) -= 1;
                 {
                     REX::W32::D3D11_QUERY_DESC queryDesc;
                     queryDesc.query = REX::W32::D3D11_QUERY::D3D11_QUERY_EVENT;
@@ -178,25 +178,19 @@ namespace plugin {
     void DrawCallHook(void *t, float mode) {
         if (replace_projection_matrix == true) {
             if (auto renderer = RE::BSGraphics::Renderer::GetSingleton()) {
-
-                float *WorldTimeFrame = (float *) REL::RelocationID(0, 410199).address();
-                float *RealTimeFrame = (float *) REL::RelocationID(0, 410200).address();
-
-
+                float *WorldTimeFrame = (float *) REL::RelocationID(523660, 410199).address();
+                float *RealTimeFrame = (float *) REL::RelocationID(523661, 410200).address();
 
                 RE::BSGraphics::Renderer::GetSingleton()->Lock();
                 renderLeft = true;
 
                 orig_DrawCallHook(t, mode);
 
-
                 renderLeft = false;
 
                 orig_DrawCallHook(t, mode);
 
                 RE::BSGraphics::Renderer::GetSingleton()->Unlock();
-
-
             }
         } else {
             orig_DrawCallHook(t, mode);
@@ -204,7 +198,6 @@ namespace plugin {
     }
     auto orig_PlayerCameraUpdate = (void (*)(RE::PlayerCamera *)) nullptr;
 
-    
     void GameEventHandler::onLoad() {
         logger::info("onLoad()");
         Hooks::install();
@@ -228,6 +221,21 @@ namespace plugin {
 
                 patched = true;
             } else if (version == REL::Version(1, 5, 97, 0)) {
+                orig_SetFrameBufferMatricesHook = (void (*)(void *t, uint64_t arg2)) REL::RelocationID(75472,0).address();
+                DetourTransactionBegin();
+                DetourUpdateThread(GetCurrentThread());
+                DetourAttach(&(PVOID &) orig_SetFrameBufferMatricesHook, SetFrameBufferMatricesHook);
+                DetourTransactionCommit();
+                auto &trampoline = SKSE::GetTrampoline();
+                SKSE::AllocTrampoline(14);
+                orig_DrawCallHook =
+                    (void (*)(void *t, float delta)) trampoline.write_call<5>(REL::RelocationID(35565, 0).address() + 0x5d2, DrawCallHook);
+                SKSE::AllocTrampoline(14);
+                orig_SceneUpdate =
+                    (void (*)(void *a)) trampoline.write_call<5>(REL::RelocationID(35556, 0).address() + 0x596, SceneUpdate);
+                SKSE::AllocTrampoline(14);
+                orig_SceneUpdateB =
+                    (void (*)(void *a)) trampoline.write_call<5>(REL::RelocationID(35556, 0).address() + 0x585, SceneUpdateB);
 
                 patched = true;
             }
@@ -235,10 +243,8 @@ namespace plugin {
     }
 
     void GameEventHandler::onPostLoad() {
-        
         logger::info("onPostLoad()");
     }
-
 
     void GameEventHandler::onPostPostLoad() {
         logger::info("onPostPostLoad()");
@@ -248,22 +254,18 @@ namespace plugin {
         logger::info("onInputLoaded()");
     }
     bool SetSeparation(RE::StaticFunctionTag *, float value) {
-    
         eyeSeparation = value;
         return true;
     }
     bool SetConverge(RE::StaticFunctionTag *, float value) {
         converge = value;
         return true;
-    
     }
     void GameEventHandler::onDataLoaded() {
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetSeparation", "AEVRSSE", SetSeparation,
-                                                             false);
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetConverge", "AEVRSSE", SetConverge,
-                                                             false);
-        auto light_array=RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectLIGH>();
-        for (auto* light : light_array) {
+        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetSeparation", "AEVRSSE", SetSeparation, false);
+        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetConverge", "AEVRSSE", SetConverge, false);
+        auto light_array = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectLIGH>();
+        for (auto *light: light_array) {
             light->data.flags.reset(RE::TES_LIGHT_FLAGS::kHemiShadow);
             light->data.flags.reset(RE::TES_LIGHT_FLAGS::kOmniShadow);
             light->data.flags.reset(RE::TES_LIGHT_FLAGS::kSpotShadow);
@@ -278,10 +280,8 @@ namespace plugin {
     void GameEventHandler::onPreLoadGame() {
         logger::info("onPreLoadGame()");
     }
-    
-    
+
     void GameEventHandler::onPostLoadGame() {
-        
         logger::info("onPostLoadGame()");
     }
 
