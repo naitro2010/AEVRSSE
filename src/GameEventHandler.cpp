@@ -17,9 +17,18 @@ namespace plugin {
     float converge = 0.005f;
     void SetFrameBufferMatricesHook(void *t, uint64_t arg2) {
         DirectX::XMMATRIX *view = (DirectX::XMMATRIX *) REL::RelocationID(524875, 388922).address();
-        DirectX::XMMATRIX *proj = (DirectX::XMMATRIX *) (REL::RelocationID(524879, 388926).address());
-        DirectX::XMMATRIX *viewproj = (DirectX::XMMATRIX *) (REL::RelocationID(524884, 388931).address());
-
+        DirectX::XMMATRIX *proj = &view[1];
+        DirectX::XMMATRIX *viewproj = &view[2];
+        DirectX::XMMATRIX *viewprojunj = &view[3];
+        DirectX::XMMATRIX *prevviewprojunj = &view[4];
+        DirectX::XMMATRIX *projunj = &view[5];
+        DirectX::XMMATRIX *projunjinv = &view[6];
+        DirectX::XMMATRIX *viewinv = &view[7];
+        DirectX::XMMATRIX *projinv = &view[8];
+        DirectX::XMMATRIX *viewprojinv = &view[9];
+        //DirectX::XMMATRIX *viewproj = (DirectX::XMMATRIX *) (REL::RelocationID(524884, 388931).address());
+        float oldmatrices[16 * 10];
+        memcpy(oldmatrices, view, 640);
         if (copy_to_cache) {
             viewcache = *view;
             projcache = *proj;
@@ -38,32 +47,47 @@ namespace plugin {
 
         float aspectRatio = ((float) size.width) / ((float) size.height);
         if (replace_projection_matrix == true) {
-            auto original_vfov = atanf(1.0f / proj->r[1].m128_f32[1]) * 2.0f;
-            auto original_nZ = proj->r[3].m128_f32[2] / (-proj->r[2].m128_f32[2]);
-            auto original_fZ = ((proj->r[2].m128_f32[2] * original_nZ) / (proj->r[2].m128_f32[2] - 1.0f));
-            float nZ = original_nZ;
-            float fZ = original_fZ;
-            float fov = original_vfov * aspectRatio;
-            float vFov = fov / aspectRatio;
-            float viewHeight = 2.0f * nZ * tanf(vFov / 2.0f);
-            float viewWidth = viewHeight * aspectRatio;
-            float shift = renderLeft ? (eyeSeparation / 2.0f) : (-eyeSeparation / 2.0f);
-            float frustum_shift = renderLeft ? (converge * viewWidth) : -(converge * viewWidth);
-            float left_left = -viewWidth / 2.0f - (frustum_shift);
-            float left_right = viewWidth / 2.0f - (frustum_shift);
-            float left_bottom = -viewHeight / 2.0f;
-            float left_top = viewHeight / 2.0f;
-            DirectX::XMMATRIX oldview = *view;
-            DirectX::XMMATRIX oldproj = *proj;
-            DirectX::XMMATRIX oldviewproj = *viewproj;
-            *view = XMMatrixMultiply((*view), DirectX::XMMatrixTranslation(-shift, 0.0, 0.0));
-            *proj = DirectX::XMMatrixPerspectiveOffCenterLH(left_left, left_right, left_bottom, left_top, nZ, fZ);
-            *viewproj = XMMatrixMultiply(*view, *proj);
-
+            DirectX::XMMATRIX newview;
+            DirectX::XMMATRIX newproj;
+            DirectX::XMMATRIX newviewproj;
+            {
+                DirectX::XMMATRIX *view_in = view;
+                DirectX::XMMATRIX *proj_in = proj;
+                auto original_vfov = atanf(1.0f / proj_in->r[1].m128_f32[1]) * 2.0f;
+                auto original_nZ = proj_in->r[3].m128_f32[2] / (-proj_in->r[2].m128_f32[2]);
+                auto original_fZ = ((proj_in->r[2].m128_f32[2] * original_nZ) / (proj_in->r[2].m128_f32[2] - 1.0f));
+                float nZ = original_nZ;
+                float fZ = original_fZ;
+                float fov = original_vfov * aspectRatio;
+                float vFov = fov / aspectRatio;
+                float viewHeight = 2.0f * nZ * tanf(vFov / 2.0f);
+                float viewWidth = viewHeight * aspectRatio;
+                float shift = renderLeft ? (eyeSeparation / 2.0f) : (-eyeSeparation / 2.0f);
+                float frustum_shift = renderLeft ? (converge * viewWidth) : -(converge * viewWidth);
+                float left_left = -viewWidth / 2.0f - (frustum_shift);
+                float left_right = viewWidth / 2.0f - (frustum_shift);
+                float left_bottom = -viewHeight / 2.0f;
+                float left_top = viewHeight / 2.0f;
+                newview = XMMatrixMultiply((*view_in), DirectX::XMMatrixTranslation(-shift, 0.0, 0.0));
+                newproj = DirectX::XMMatrixPerspectiveOffCenterLH(left_left, left_right, left_bottom, left_top, nZ, fZ);
+                newviewproj = XMMatrixMultiply(newview, newproj);
+                *viewprojunj = newviewproj;
+                *prevviewprojunj = newviewproj;
+                *projunj = newproj;
+                *projunjinv = newproj;
+                *projunjinv = DirectX::XMMatrixTranspose(*projunjinv);
+                *viewinv = newview;
+                *viewinv = DirectX::XMMatrixTranspose(*viewinv);
+                *projinv = newproj;
+                *projinv = DirectX::XMMatrixTranspose(*projinv);
+                *viewprojinv = newviewproj;
+                *viewprojinv = DirectX::XMMatrixTranspose(*viewprojinv);
+                *view = newview;
+                *proj = newproj;
+                *viewproj = newviewproj;
+            }
             orig_SetFrameBufferMatricesHook(t, arg2);
-            *view = oldview;
-            *proj = oldproj;
-            *viewproj = oldviewproj;
+            memcpy(view,oldmatrices, 640);
         } else {
             return orig_SetFrameBufferMatricesHook(t, arg2);
         }
@@ -174,6 +198,22 @@ namespace plugin {
             orig_SceneUpdate(a);
         }
     }
+    static bool DoFrameCounterBugFix = false;
+    auto FrameCounterBug = (void (*)(RE::NiAVObject **)) nullptr;
+    
+    void FrameCounterBugFix(RE::NiAVObject** obj) {
+        if (obj[2]->GetRTTI()->IsKindOf((RE::NiRTTI *) RE::NiRTTI_BSDynamicTriShape.address())) {
+            RE::BSDynamicTriShape *shape = (RE::BSDynamicTriShape *)obj[2];
+            if (shape) {
+                if (DoFrameCounterBugFix) {
+                    if (shape->lastUpdatedFrameCounter != (*(uint32_t*)REL::RelocationID(525008, 411489).address())) {
+                        shape->lastUpdatedFrameCounter = (*(uint32_t *) REL::RelocationID(525008, 411489).address());
+                    }
+                }
+            }
+        }
+        FrameCounterBug(obj);
+    }
     auto orig_DrawCallHook = (void (*)(void *t, float)) nullptr;
     void DrawCallHook(void *t, float mode) {
         if (replace_projection_matrix == true) {
@@ -183,13 +223,13 @@ namespace plugin {
 
                 RE::BSGraphics::Renderer::GetSingleton()->Lock();
                 renderLeft = ((*(uint32_t *) REL::RelocationID(525008, 411489).address()) & 1) == 0;
-
                 orig_DrawCallHook(t, mode);
 
                 renderLeft = !renderLeft;
-
+                DoFrameCounterBugFix = true;
                 orig_DrawCallHook(t, mode);
                 (*(uint32_t *) REL::RelocationID(525008, 411489).address()) += 2;
+                DoFrameCounterBugFix = false;
                 RE::BSGraphics::Renderer::GetSingleton()->Unlock();
             }
         } else {
@@ -204,6 +244,11 @@ namespace plugin {
         if (patched == false) {
             auto version = REL::Module::get().version();
             if (version == REL::Version(1, 6, 1170, 0)) {
+                FrameCounterBug = (void (*)(RE::NiAVObject **)) REL::RelocationID(0xFFFFFFFFFFFFFFFF, 107637).address();
+                DetourTransactionBegin();
+                DetourUpdateThread(GetCurrentThread());
+                DetourAttach(&(PVOID &) FrameCounterBug,FrameCounterBugFix);
+                DetourTransactionCommit();
                 orig_SetFrameBufferMatricesHook = (void (*)(void *t, uint64_t arg2)) REL::RelocationID(0, 77258).address();
                 DetourTransactionBegin();
                 DetourUpdateThread(GetCurrentThread());
@@ -218,9 +263,11 @@ namespace plugin {
                 SKSE::AllocTrampoline(14);
                 orig_SceneUpdateB =
                     (void (*)(void *a)) trampoline.write_call<5>(REL::RelocationID(0, 36555).address() + 0x5f0, SceneUpdateB);
+                
 
                 patched = true;
             } else if (version == REL::Version(1, 5, 97, 0)) {
+                // TODO: find offsets for 1.5.97 Frame Counter Bug
                 orig_SetFrameBufferMatricesHook = (void (*)(void *t, uint64_t arg2)) REL::RelocationID(75472,0).address();
                 DetourTransactionBegin();
                 DetourUpdateThread(GetCurrentThread());
