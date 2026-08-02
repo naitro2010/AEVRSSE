@@ -244,7 +244,7 @@ namespace plugin {
         if (patched == false) {
             auto version = REL::Module::get().version();
             if (version == REL::Version(1, 6, 1170, 0)) {
-                FrameCounterBug = (void (*)(RE::NiAVObject **)) REL::RelocationID(0xFFFFFFFFFFFFFFFF, 107637).address();
+                FrameCounterBug = (void (*)(RE::NiAVObject **)) REL::RelocationID(100847, 107637).address();
                 DetourTransactionBegin();
                 DetourUpdateThread(GetCurrentThread());
                 DetourAttach(&(PVOID &) FrameCounterBug,FrameCounterBugFix);
@@ -267,7 +267,11 @@ namespace plugin {
 
                 patched = true;
             } else if (version == REL::Version(1, 5, 97, 0)) {
-                // TODO: find offsets for 1.5.97 Frame Counter Bug
+                FrameCounterBug = (void (*)(RE::NiAVObject **)) REL::RelocationID(100847,107637).address();
+                DetourTransactionBegin();
+                DetourUpdateThread(GetCurrentThread());
+                DetourAttach(&(PVOID &) FrameCounterBug,FrameCounterBugFix);
+                DetourTransactionCommit();
                 orig_SetFrameBufferMatricesHook = (void (*)(void *t, uint64_t arg2)) REL::RelocationID(75472,0).address();
                 DetourTransactionBegin();
                 DetourUpdateThread(GetCurrentThread());
