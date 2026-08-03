@@ -206,8 +206,8 @@ namespace plugin {
             RE::BSDynamicTriShape *shape = (RE::BSDynamicTriShape *)obj[2];
             if (shape) {
                 if (DoFrameCounterBugFix) {
-                    if (shape->lastUpdatedFrameCounter != (*(uint32_t*)REL::RelocationID(525008, 411489).address())) {
-                        shape->lastUpdatedFrameCounter = (*(uint32_t *) REL::RelocationID(525008, 411489).address());
+                    if (shape->GetDynamicTrishapeRuntimeData().frameCount != (*(uint32_t*)REL::RelocationID(525008, 411489).address())) {
+                        shape->GetDynamicTrishapeRuntimeData().frameCount = (*(uint32_t *) REL::RelocationID(525008, 411489).address());
                     }
                 }
             }
