@@ -209,6 +209,10 @@ namespace plugin {
                     if (shape->GetDynamicTrishapeRuntimeData().frameCount != (*(uint32_t*)REL::RelocationID(525008, 411489).address())) {
                         shape->GetDynamicTrishapeRuntimeData().frameCount = (*(uint32_t *) REL::RelocationID(525008, 411489).address());
                     }
+                    if (!shape->GetGeometryRuntimeData().rendererData) {
+                        logger::info("rendererData was missing");
+                        return;
+                    }
                 }
             }
         }
