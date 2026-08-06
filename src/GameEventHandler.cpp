@@ -87,7 +87,7 @@ namespace plugin {
                 *viewproj = newviewproj;
             }
             orig_SetFrameBufferMatricesHook(t, arg2);
-            memcpy(view,oldmatrices, 640);
+            memcpy(view, oldmatrices, 640);
         } else {
             return orig_SetFrameBufferMatricesHook(t, arg2);
         }
@@ -200,15 +200,12 @@ namespace plugin {
     }
     static bool DoFrameCounterBugFix = false;
     auto FrameCounterBug = (void (*)(RE::NiAVObject **)) nullptr;
-    
-    void FrameCounterBugFix(RE::NiAVObject** obj) {
+
+    void FrameCounterBugFix(RE::NiAVObject **obj) {
         if (obj[2]->GetRTTI()->IsKindOf((RE::NiRTTI *) RE::NiRTTI_BSDynamicTriShape.address())) {
-            RE::BSDynamicTriShape *shape = (RE::BSDynamicTriShape *)obj[2];
+            RE::BSDynamicTriShape *shape = (RE::BSDynamicTriShape *) obj[2];
             if (shape) {
                 if (DoFrameCounterBugFix) {
-                    if (shape->GetDynamicTrishapeRuntimeData().frameCount != (*(uint32_t*)REL::RelocationID(525008, 411489).address())) {
-                        shape->GetDynamicTrishapeRuntimeData().frameCount = (*(uint32_t *) REL::RelocationID(525008, 411489).address());
-                    }
                     if (!shape->GetGeometryRuntimeData().rendererData) {
                         logger::info("rendererData was missing");
                         return;
@@ -226,11 +223,12 @@ namespace plugin {
                 float *RealTimeFrame = (float *) REL::RelocationID(523661, 410200).address();
 
                 RE::BSGraphics::Renderer::GetSingleton()->Lock();
+                DoFrameCounterBugFix = true;
                 renderLeft = ((*(uint32_t *) REL::RelocationID(525008, 411489).address()) & 1) == 0;
                 orig_DrawCallHook(t, mode);
 
                 renderLeft = !renderLeft;
-                DoFrameCounterBugFix = true;
+
                 orig_DrawCallHook(t, mode);
                 (*(uint32_t *) REL::RelocationID(525008, 411489).address()) += 2;
                 DoFrameCounterBugFix = false;
@@ -251,7 +249,7 @@ namespace plugin {
                 FrameCounterBug = (void (*)(RE::NiAVObject **)) REL::RelocationID(100847, 107637).address();
                 DetourTransactionBegin();
                 DetourUpdateThread(GetCurrentThread());
-                DetourAttach(&(PVOID &) FrameCounterBug,FrameCounterBugFix);
+                DetourAttach(&(PVOID &) FrameCounterBug, FrameCounterBugFix);
                 DetourTransactionCommit();
                 orig_SetFrameBufferMatricesHook = (void (*)(void *t, uint64_t arg2)) REL::RelocationID(0, 77258).address();
                 DetourTransactionBegin();
@@ -267,16 +265,15 @@ namespace plugin {
                 SKSE::AllocTrampoline(14);
                 orig_SceneUpdateB =
                     (void (*)(void *a)) trampoline.write_call<5>(REL::RelocationID(0, 36555).address() + 0x5f0, SceneUpdateB);
-                
 
                 patched = true;
             } else if (version == REL::Version(1, 5, 97, 0)) {
-                FrameCounterBug = (void (*)(RE::NiAVObject **)) REL::RelocationID(100847,107637).address();
+                FrameCounterBug = (void (*)(RE::NiAVObject **)) REL::RelocationID(100847, 107637).address();
                 DetourTransactionBegin();
                 DetourUpdateThread(GetCurrentThread());
-                DetourAttach(&(PVOID &) FrameCounterBug,FrameCounterBugFix);
+                DetourAttach(&(PVOID &) FrameCounterBug, FrameCounterBugFix);
                 DetourTransactionCommit();
-                orig_SetFrameBufferMatricesHook = (void (*)(void *t, uint64_t arg2)) REL::RelocationID(75472,0).address();
+                orig_SetFrameBufferMatricesHook = (void (*)(void *t, uint64_t arg2)) REL::RelocationID(75472, 0).address();
                 DetourTransactionBegin();
                 DetourUpdateThread(GetCurrentThread());
                 DetourAttach(&(PVOID &) orig_SetFrameBufferMatricesHook, SetFrameBufferMatricesHook);
@@ -286,8 +283,7 @@ namespace plugin {
                 orig_DrawCallHook =
                     (void (*)(void *t, float delta)) trampoline.write_call<5>(REL::RelocationID(35565, 0).address() + 0x5d2, DrawCallHook);
                 SKSE::AllocTrampoline(14);
-                orig_SceneUpdate =
-                    (void (*)(void *a)) trampoline.write_call<5>(REL::RelocationID(35556, 0).address() + 0x596, SceneUpdate);
+                orig_SceneUpdate = (void (*)(void *a)) trampoline.write_call<5>(REL::RelocationID(35556, 0).address() + 0x596, SceneUpdate);
                 SKSE::AllocTrampoline(14);
                 orig_SceneUpdateB =
                     (void (*)(void *a)) trampoline.write_call<5>(REL::RelocationID(35556, 0).address() + 0x585, SceneUpdateB);
