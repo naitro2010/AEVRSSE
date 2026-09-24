@@ -135,9 +135,10 @@ namespace plugin {
                     queryDesc.miscFlags = 0;
                     REX::W32::ID3D11Query *pEventQuery = nullptr;
                     RE::BSGraphics::Renderer::GetSingleton()->GetDevice()->CreateQuery(&queryDesc, &pEventQuery);
-                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->Flush();
-                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->End(pEventQuery);
-                    while (RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->GetData(pEventQuery, nullptr, 0, 0) != 0) {
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererDataSingleton()->context->Flush();
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererDataSingleton()->context->End(pEventQuery);
+                    while (RE::BSGraphics::Renderer::GetSingleton()->GetRendererDataSingleton()->context->GetData(pEventQuery, nullptr, 0,
+                                                                                                                  0) != 0) {
                         std::this_thread::sleep_for(std::chrono::microseconds(100));
                     }
                     pEventQuery->Release();
@@ -150,9 +151,10 @@ namespace plugin {
                     queryDesc.miscFlags = 0;
                     REX::W32::ID3D11Query *pEventQuery = nullptr;
                     RE::BSGraphics::Renderer::GetSingleton()->GetDevice()->CreateQuery(&queryDesc, &pEventQuery);
-                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->Flush();
-                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->End(pEventQuery);
-                    while (RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->GetData(pEventQuery, nullptr, 0, 0) != 0) {
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererDataSingleton()->context->Flush();
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererDataSingleton()->context->End(pEventQuery);
+                    while (RE::BSGraphics::Renderer::GetSingleton()->GetRendererDataSingleton()->context->GetData(pEventQuery, nullptr, 0,
+                                                                                                                  0) != 0) {
                         std::this_thread::sleep_for(std::chrono::microseconds(100));
                     }
                     pEventQuery->Release();
@@ -168,9 +170,10 @@ namespace plugin {
                     queryDesc.miscFlags = 0;
                     REX::W32::ID3D11Query *pEventQuery = nullptr;
                     RE::BSGraphics::Renderer::GetSingleton()->GetDevice()->CreateQuery(&queryDesc, &pEventQuery);
-                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->Flush();
-                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->End(pEventQuery);
-                    while (RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->GetData(pEventQuery, nullptr, 0, 0) != 0) {
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererDataSingleton()->context->Flush();
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererDataSingleton()->context->End(pEventQuery);
+                    while (RE::BSGraphics::Renderer::GetSingleton()->GetRendererDataSingleton()->context->GetData(pEventQuery, nullptr, 0,
+                                                                                                                  0) != 0) {
                         std::this_thread::sleep_for(std::chrono::microseconds(100));
                     }
                     pEventQuery->Release();
@@ -183,9 +186,10 @@ namespace plugin {
                     queryDesc.miscFlags = 0;
                     REX::W32::ID3D11Query *pEventQuery = nullptr;
                     RE::BSGraphics::Renderer::GetSingleton()->GetDevice()->CreateQuery(&queryDesc, &pEventQuery);
-                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->Flush();
-                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->End(pEventQuery);
-                    while (RE::BSGraphics::Renderer::GetSingleton()->GetRendererData()->context->GetData(pEventQuery, nullptr, 0, 0) != 0) {
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererDataSingleton()->context->Flush();
+                    RE::BSGraphics::Renderer::GetSingleton()->GetRendererDataSingleton()->context->End(pEventQuery);
+                    while (RE::BSGraphics::Renderer::GetSingleton()->GetRendererDataSingleton()->context->GetData(pEventQuery, nullptr, 0,
+                                                                                                                  0) != 0) {
                         std::this_thread::sleep_for(std::chrono::microseconds(100));
                     }
                     pEventQuery->Release();
@@ -245,7 +249,30 @@ namespace plugin {
         Hooks::install();
         if (patched == false) {
             auto version = REL::Module::get().version();
-            if (version == REL::Version(1, 6, 1170, 0)) {
+            if (version == REL::Version(1, 7, 104, 0)) {
+                FrameCounterBug = (void (*)(RE::NiAVObject **)) REL::RelocationID(100847, 107637).address();
+                DetourTransactionBegin();
+                DetourUpdateThread(GetCurrentThread());
+                DetourAttach(&(PVOID &) FrameCounterBug, FrameCounterBugFix);
+                DetourTransactionCommit();
+                orig_SetFrameBufferMatricesHook = (void (*)(void *t, uint64_t arg2)) REL::RelocationID(0, 77258).address();
+                DetourTransactionBegin();
+                DetourUpdateThread(GetCurrentThread());
+                DetourAttach(&(PVOID &) orig_SetFrameBufferMatricesHook, SetFrameBufferMatricesHook);
+                DetourTransactionCommit();
+                auto &trampoline = SKSE::GetTrampoline();
+                SKSE::AllocTrampoline(14);
+                orig_DrawCallHook =
+                    (void (*)(void *t, float delta)) trampoline.write_call<5>(REL::RelocationID(0, 36564).address() + 0xaa9, DrawCallHook);
+                SKSE::AllocTrampoline(14);
+                orig_SceneUpdate = (void (*)(void *a)) trampoline.write_call<5>(REL::RelocationID(0, 36555).address() + 0x601, SceneUpdate);
+                SKSE::AllocTrampoline(14);
+                orig_SceneUpdateB =
+                    (void (*)(void *a)) trampoline.write_call<5>(REL::RelocationID(0, 36555).address() + 0x5f0, SceneUpdateB);
+
+                patched = true;
+            }
+            else if (version == REL::Version(1, 6, 1170, 0)) {
                 FrameCounterBug = (void (*)(RE::NiAVObject **)) REL::RelocationID(100847, 107637).address();
                 DetourTransactionBegin();
                 DetourUpdateThread(GetCurrentThread());
@@ -296,14 +323,6 @@ namespace plugin {
     void GameEventHandler::onPostLoad() {
         logger::info("onPostLoad()");
     }
-
-    void GameEventHandler::onPostPostLoad() {
-        logger::info("onPostPostLoad()");
-    }
-
-    void GameEventHandler::onInputLoaded() {
-        logger::info("onInputLoaded()");
-    }
     bool SetSeparation(RE::StaticFunctionTag *, float value) {
         eyeSeparation = value;
         return true;
@@ -312,7 +331,7 @@ namespace plugin {
         converge = value;
         return true;
     }
-    void GameEventHandler::onDataLoaded() {
+    void GameEventHandler::onPostPostLoad() {
         RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetSeparation", "AEVRSSE", SetSeparation, false);
         RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetConverge", "AEVRSSE", SetConverge, false);
         auto light_array = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectLIGH>();
@@ -321,6 +340,15 @@ namespace plugin {
             light->data.flags.reset(RE::TES_LIGHT_FLAGS::kOmniShadow);
             light->data.flags.reset(RE::TES_LIGHT_FLAGS::kSpotShadow);
         }
+        logger::info("onPostPostLoad()");
+    }
+
+    void GameEventHandler::onInputLoaded() {
+        logger::info("onInputLoaded()");
+    }
+
+    void GameEventHandler::onDataLoaded() {
+
         logger::info("onDataLoaded()");
     }
 
