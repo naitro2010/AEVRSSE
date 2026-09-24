@@ -263,7 +263,7 @@ namespace plugin {
                 auto &trampoline = SKSE::GetTrampoline();
                 SKSE::AllocTrampoline(14);
                 orig_DrawCallHook =
-                    (void (*)(void *t, float delta)) trampoline.write_call<5>(REL::RelocationID(0, 36564).address() + 0xa97, DrawCallHook);
+                    (void (*)(void *t, float delta)) trampoline.write_call<5>(REL::RelocationID(0, 36564).address() + 0xaa9, DrawCallHook);
                 SKSE::AllocTrampoline(14);
                 orig_SceneUpdate = (void (*)(void *a)) trampoline.write_call<5>(REL::RelocationID(0, 36555).address() + 0x601, SceneUpdate);
                 SKSE::AllocTrampoline(14);
@@ -323,14 +323,6 @@ namespace plugin {
     void GameEventHandler::onPostLoad() {
         logger::info("onPostLoad()");
     }
-
-    void GameEventHandler::onPostPostLoad() {
-        logger::info("onPostPostLoad()");
-    }
-
-    void GameEventHandler::onInputLoaded() {
-        logger::info("onInputLoaded()");
-    }
     bool SetSeparation(RE::StaticFunctionTag *, float value) {
         eyeSeparation = value;
         return true;
@@ -339,7 +331,7 @@ namespace plugin {
         converge = value;
         return true;
     }
-    void GameEventHandler::onDataLoaded() {
+    void GameEventHandler::onPostPostLoad() {
         RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetSeparation", "AEVRSSE", SetSeparation, false);
         RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetConverge", "AEVRSSE", SetConverge, false);
         auto light_array = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectLIGH>();
@@ -348,6 +340,15 @@ namespace plugin {
             light->data.flags.reset(RE::TES_LIGHT_FLAGS::kOmniShadow);
             light->data.flags.reset(RE::TES_LIGHT_FLAGS::kSpotShadow);
         }
+        logger::info("onPostPostLoad()");
+    }
+
+    void GameEventHandler::onInputLoaded() {
+        logger::info("onInputLoaded()");
+    }
+
+    void GameEventHandler::onDataLoaded() {
+
         logger::info("onDataLoaded()");
     }
 
