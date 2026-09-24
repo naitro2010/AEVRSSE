@@ -282,7 +282,7 @@ namespace plugin {
                 DetourTransactionBegin();
                 DetourUpdateThread(GetCurrentThread());
                 DetourAttach(&(PVOID &) orig_SetFrameBufferMatricesHook, SetFrameBufferMatricesHook);
-                DetourTransactionCommit();
+                DetourTransactionCommit();  
                 auto &trampoline = SKSE::GetTrampoline();
                 SKSE::AllocTrampoline(14);
                 orig_DrawCallHook =
@@ -332,14 +332,7 @@ namespace plugin {
         return true;
     }
     void GameEventHandler::onPostPostLoad() {
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetSeparation", "AEVRSSE", SetSeparation, false);
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetConverge", "AEVRSSE", SetConverge, false);
-        auto light_array = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectLIGH>();
-        for (auto *light: light_array) {
-            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kHemiShadow);
-            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kOmniShadow);
-            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kSpotShadow);
-        }
+
         logger::info("onPostPostLoad()");
     }
 
@@ -348,7 +341,7 @@ namespace plugin {
     }
 
     void GameEventHandler::onDataLoaded() {
-
+        
         logger::info("onDataLoaded()");
     }
 
@@ -361,6 +354,14 @@ namespace plugin {
     }
 
     void GameEventHandler::onPostLoadGame() {
+        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetSeparation", "AEVRSSE", SetSeparation, false);
+        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetConverge", "AEVRSSE", SetConverge, false);
+        auto light_array = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectLIGH>();
+        for (auto *light: light_array) {
+            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kHemiShadow);
+            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kOmniShadow);
+            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kSpotShadow);
+        }
         logger::info("onPostLoadGame()");
     }
 
