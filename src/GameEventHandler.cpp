@@ -341,7 +341,14 @@ namespace plugin {
     }
 
     void GameEventHandler::onDataLoaded() {
-        
+        RE::SkyrimVM::GetSingleton()->GetImpl()->RegisterFunction("SetSeparation", "AEVRSSE", SetSeparation, false);
+        RE::SkyrimVM::GetSingleton()->GetImpl()->RegisterFunction("SetConverge", "AEVRSSE", SetConverge, false);
+        auto light_array = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectLIGH>();
+        for (auto *light: light_array) {
+            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kHemiShadow);
+            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kOmniShadow);
+            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kSpotShadow);
+        } 
         logger::info("onDataLoaded()");
     }
 
@@ -354,14 +361,7 @@ namespace plugin {
     }
 
     void GameEventHandler::onPostLoadGame() {
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetSeparation", "AEVRSSE", SetSeparation, false);
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetConverge", "AEVRSSE", SetConverge, false);
-        auto light_array = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectLIGH>();
-        for (auto *light: light_array) {
-            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kHemiShadow);
-            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kOmniShadow);
-            light->data.flags.reset(RE::TES_LIGHT_FLAGS::kSpotShadow);
-        }
+
         logger::info("onPostLoadGame()");
     }
 
