@@ -409,6 +409,11 @@ namespace plugin {
                 DetourAttach(&(PVOID &) orig_SetFrameBufferMatricesHook, SetFrameBufferMatricesHook);
                 DetourTransactionCommit();
                 auto &trampoline = SKSE::GetTrampoline();
+                orig_SetJobTaskEvent = (void (*)(uint32_t id)) REL::RelocationID(0, 69514).address();
+                DetourTransactionBegin();
+                DetourUpdateThread(GetCurrentThread());
+                DetourAttach(&(PVOID &) orig_SetJobTaskEvent, SetJobTaskEventHook);
+                DetourTransactionCommit();
                 SKSE::AllocTrampoline(14);
                 orig_DrawCallHook =
                     (void (*)(void *t, float delta)) trampoline.write_call<5>(REL::RelocationID(0, 36564).address() + 0xa97, DrawCallHook);
@@ -432,6 +437,11 @@ namespace plugin {
                 DetourTransactionBegin();
                 DetourUpdateThread(GetCurrentThread());
                 DetourAttach(&(PVOID &) orig_SetFrameBufferMatricesHook, SetFrameBufferMatricesHook);
+                DetourTransactionCommit();
+                orig_SetJobTaskEvent = (void (*)(uint32_t id)) REL::RelocationID(68165,0).address();
+                DetourTransactionBegin();
+                DetourUpdateThread(GetCurrentThread());
+                DetourAttach(&(PVOID &) orig_SetJobTaskEvent, SetJobTaskEventHook);
                 DetourTransactionCommit();
                 auto &trampoline = SKSE::GetTrampoline();
                 SKSE::AllocTrampoline(14);
